@@ -1,0 +1,156 @@
+{%- liquid
+  assign latest_products_collection = collections['latest-products']
+  assign latest_products = latest_products_collection.products | limit: section.settings.product_limit
+  assign collection_title = latest_products_collection.title
+-%}
+
+<section class="latest-products-slider color-{{ section.settings.color_scheme }} {% if section.settings.secondary_background %}background-secondary{% else %}gradient{% endif %}">
+  <div class="page-width section-{{ section.id }}-padding{% if section.settings.secondary_background %} isolate{% endif %}">
+    <h2 class="section-title">{{ collection_title }}</h2>
+    <div class="latest-products-slider__container">
+      <div class="slider">
+        {%- for product in latest_products -%}
+          <div class="slider__item">
+            <a href="{{ product.url }}" class="product-card">
+              <div class="product-card__image-wrapper">
+                {%- if product.featured_image -%}
+                  <img src="{{ product.featured_image | img_url: 'medium' }}" alt="{{ product.title }}">
+                {%- else -%}
+                  {{ 'placeholder-image' | placeholder_svg_tag: 'placeholder-svg' }}
+                {%- endif -%}
+              </div>
+              <div class="product-card__info">
+                <h3 class="product-card__title">{{ product.title }}</h3>
+                <div class="product-card__price">
+                  {%- if product.compare_at_price > product.price -%}
+                    <span class="product-card__price--compare">{{ product.compare_at_price | money }}</span>
+                  {%- endif -%}
+                  <span class="product-card__price--current">{{ product.price | money }}</span>
+                </div>
+              </div>
+            </a>
+          </div>
+        {%- endfor -%}
+      </div>
+    </div>
+    <div class="center collection__view-all scroll-trigger animate--slide-in">
+      <a href="{{ latest_products_collection.url }}" class="button">View All</a>
+    </div>
+  </div>
+
+ {%- style -%}
+    .latest-products-slider {
+        padding-top: {{ section.settings.padding_top | times: 0.75 | round: 0 }}px;
+        padding-bottom: {{ section.settings.padding_bottom | times: 0.75 | round: 0 }}px;
+        text-align: left;
+    }
+   .product-card__price{
+      justify-content: left !important;
+   }
+    @media screen and (min-width: 750px) {
+        .latest-products-slider {
+            padding-top: {{ section.settings.padding_top }}px;
+            padding-bottom: {{ section.settings.padding_bottom }}px;
+        }
+    }
+    .latest-products-slider__container {
+        position: relative;
+    }
+    .slider {
+        display: flex;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+        gap: 1rem; /* Ensure space between items */
+    }
+    .slider__item {
+        flex: 0 0 auto;
+        scroll-snap-align: start;
+        box-sizing: border-box;
+        width: 100%;
+    }
+    @media screen and (min-width: 750px) {
+        .slider__item {
+            width: calc(100% / 4 - 1rem);
+        }
+    }
+    .product-card {
+        display: block;
+        text-decoration: none;
+        color: inherit;
+    }
+    .product-card__image-wrapper {
+        width: 100%;
+        padding-top: 100%;
+        position: relative;
+        overflow: hidden;
+    }
+    .product-card__image-wrapper img {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .product-card__title {
+        font-size: 1.25rem;
+        margin: 0.5rem 0;
+    }
+    .product-card__price {
+        display: flex;
+        align-items: center;
+        justify-content: center; /* Center align the price */
+    }
+    .product-card__price--compare {
+        text-decoration: line-through;
+        margin-right: 0.5rem;
+    }
+    .product-card__price--current {
+        font-weight: bold;
+    }
+    .view-all-button-container {
+        text-align: center;
+        margin-top: 1rem;
+    }
+    .view-all-button {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        background-color: #000;
+        color: #fff;
+        text-decoration: none;
+        border-radius: 4px;
+    }
+  {%- endstyle -%}
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const slider = document.querySelector('.latest-products-slider .slider');
+      let isDown = false;
+      let startX;
+      let scrollLeft;
+
+      slider.addEventListener('mousedown', (e) => {
+        isDown = true;
+        slider.classList.add('active');
+        startX = e.pageX - slider.offsetLeft;
+        scrollLeft = slider.scrollLeft;
+      });
+      slider.addEventListener('mouseleave', () => {
+        isDown = false;
+        slider.classList.remove('active');
+      });
+      slider.addEventListener('mouseup', () => {
+        isDown = false;
+        slider.classList.remove('active');
+      });
+      slider.addEventListener('mousemove', (e) => {
+        if (!isDown) return;
+        e.preventDefault();
+        const x = e.pageX - slider.offsetLeft;
+        const walk = (x - startX) * 3; //scroll-fast
+        slider.scrollLeft = scrollLeft - walk;
+      });
+    });
+  </script>
+</section>
