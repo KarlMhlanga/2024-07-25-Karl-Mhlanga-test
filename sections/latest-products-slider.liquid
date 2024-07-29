@@ -32,22 +32,25 @@
           </div>
         {%- endfor -%}
       </div>
+      <!-- Pagination Dots -->
+      <div class="pagination-dots"></div>
     </div>
     <div class="center collection__view-all scroll-trigger animate--slide-in">
       <a href="{{ latest_products_collection.url }}" class="button">View All</a>
     </div>
   </div>
 
- {%- style -%}
+  {%- style -%}
     .latest-products-slider {
-        padding-top: {{ section.settings.padding_top | times: 0.75 | round: 0 }}px;
-        padding-bottom: {{ section.settings.padding_bottom | times: 0.75 | round: 0 }}px;
+        padding-top: 1rem;
+        padding-bottom: 1rem;
         text-align: left;
-      background-color: #f0f0f0;
+        background-color: #f0f0f0;
+        position: relative;
     }
-   .product-card__price{
-      justify-content: left !important;
-   }
+    .product-card__price{
+        justify-content: left !important;
+    }
     @media screen and (min-width: 750px) {
         .latest-products-slider {
             padding-top: 1rem;
@@ -64,9 +67,9 @@
         -webkit-overflow-scrolling: touch;
         gap: 1rem; /* Ensure space between items */
     }
-   .product-card__image-wrapper{
-     border-radius: 15px;
-   }
+    .product-card__image-wrapper{
+        border-radius: 15px;
+    }
     .slider__item {
         flex: 0 0 auto;
         scroll-snap-align: start;
@@ -125,14 +128,60 @@
         text-decoration: none;
         border-radius: 4px;
     }
+
+    /* Pagination Dots Styles */
+    .pagination-dots {
+        position: absolute;
+        bottom: 10px; /* Adjust this value as needed */
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 5px; /* Space between dots */
+    }
+    .pagination-dots .dot {
+        width: 10px; /* Dot size */
+        height: 10px;
+        border-radius: 50%;
+        background-color: #999; /* Inactive dot color */
+        cursor: pointer;
+    }
+    .pagination-dots .dot.active {
+        background-color: #333; /* Active dot color */
+    }
   {%- endstyle -%}
 
   <script>
     document.addEventListener('DOMContentLoaded', function () {
       const slider = document.querySelector('.latest-products-slider .slider');
+      const dotsContainer = document.querySelector('.pagination-dots');
+      const slides = document.querySelectorAll('.slider__item');
       let isDown = false;
       let startX;
       let scrollLeft;
+
+      // Create pagination dots based on the number of slides
+      slides.forEach((_, index) => {
+        const dot = document.createElement('div');
+        dot.classList.add('dot');
+        if (index === 0) dot.classList.add('active'); // Make the first dot active initially
+        dot.addEventListener('click', () => {
+          slider.scrollLeft = slider.offsetWidth * index;
+          updateDots(index);
+        });
+        dotsContainer.appendChild(dot);
+      });
+
+      function updateDots(index) {
+        const dots = document.querySelectorAll('.pagination-dots .dot');
+        dots.forEach((dot, i) => {
+          dot.classList.toggle('active', i === index);
+        });
+      }
+
+      slider.addEventListener('scroll', () => {
+        const index = Math.round(slider.scrollLeft / slider.offsetWidth);
+        updateDots(index);
+      });
 
       slider.addEventListener('mousedown', (e) => {
         isDown = true;
@@ -140,14 +189,17 @@
         startX = e.pageX - slider.offsetLeft;
         scrollLeft = slider.scrollLeft;
       });
+
       slider.addEventListener('mouseleave', () => {
         isDown = false;
         slider.classList.remove('active');
       });
+
       slider.addEventListener('mouseup', () => {
         isDown = false;
         slider.classList.remove('active');
       });
+
       slider.addEventListener('mousemove', (e) => {
         if (!isDown) return;
         e.preventDefault();
